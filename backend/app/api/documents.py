@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -34,12 +33,18 @@ def create_doc(body: DocumentCreate, db: Session = Depends(get_db)):
 def list_docs(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    search: str = Query(None, description='按标题和标签搜索'),
     db: Session = Depends(get_db),
 ):
+    q = db.query(Document)
+    if search:
+        like = f'%{search}%'
+        q = q.filter(
+            Document.title.like(like) | Document.tags.like(like)
+        )
     offset = (page - 1) * page_size
     docs = (
-        db.query(Document)
-        .order_by(Document.created_at.desc())
+        q.order_by(Document.created_at.desc())
         .offset(offset)
         .limit(page_size)
         .all()
@@ -86,7 +91,7 @@ def delete_doc(doc_id: int, db: Session = Depends(get_db)):
 # ─── 批量删除 ───
 
 @router.post('/documents/batch-delete', status_code=204)
-def batch_delete(ids: List[int], db: Session = Depends(get_db)):
+def batch_delete(ids: list[int], db: Session = Depends(get_db)):
     db.query(Document).filter(Document.id.in_(ids)).delete(synchronize_session=False)
     db.commit()
 

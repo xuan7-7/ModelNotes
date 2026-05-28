@@ -6,10 +6,10 @@ export const useDocumentsStore = defineStore('documents', () => {
   const documents = ref([])
   const loading = ref(false)
 
-  async function fetchDocuments() {
+  async function fetchDocuments(params = {}) {
     loading.value = true
     try {
-      const { data } = await api.fetchDocuments()
+      const { data } = await api.fetchDocuments(params)
       documents.value = data
     } finally {
       loading.value = false

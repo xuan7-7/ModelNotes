@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, Grid, List, Upload, Checked, Delete, Share, Close } from '@element-plus/icons-vue'
+import { Plus, Grid, List, Upload, Checked, Delete, Share, Close, Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useDocumentsStore } from '@/stores/documents'
 import { batchDeleteDocuments } from '@/api/document'
@@ -9,6 +9,16 @@ import { batchDeleteDocuments } from '@/api/document'
 const router = useRouter()
 const store = useDocumentsStore()
 const viewMode = ref('grid')
+const searchKeyword = ref('')
+
+function onSearch() {
+  store.fetchDocuments(searchKeyword.value ? { search: searchKeyword.value } : {})
+}
+
+function onClearSearch() {
+  searchKeyword.value = ''
+  store.fetchDocuments()
+}
 
 // 多选模式
 const selectMode = ref(false)
@@ -109,6 +119,17 @@ async function handleBatchShare() {
     <div class="toolbar">
       <div class="toolbar-left">
         <span v-if="!selectMode" class="doc-count">共 {{ store.documents.length }} 篇笔记</span>
+        <el-input
+          v-if="!selectMode && !isEmpty"
+          v-model="searchKeyword"
+          placeholder="搜索标题或标签..."
+          :prefix-icon="Search"
+          clearable
+          size="small"
+          style="padding-left:15px; width:220px"
+          @keyup.enter="onSearch"
+          @clear="onClearSearch"
+        />
         <el-checkbox
           v-if="selectMode"
           :model-value="isAllSelected"
